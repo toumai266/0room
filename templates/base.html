@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>0room - Security Tools</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Press+Start+2P&display=swap"
+        rel="stylesheet">
+</head>
+
+<body>
+    <div class="app-container">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <a href="/" class="logo">
+                    <img src="{{ url_for('static', filename='images/logo.png') }}" alt="0room Logo"
+                        class="sidebar-logo-img">
+                </a>
+            </div>
+            <nav class="sidebar-nav">
+                <div class="nav-category">보안 도구 모음</div>
+                <ul class="nav-links">
+                    <li><a href="/password-check" class="{{ 'active' if request.path == '/password-check' else '' }}">🔐
+                            암호 검사기</a></li>
+                    <li><a href="/url-expander" class="{{ 'active' if request.path == '/url-expander' else '' }}">🔗 안심
+                            링크</a></li>
+                </ul>
+            </nav>
+        </aside>
+
+        <main class="main-content">
+            <div class="content-container">
+                {% block content %}{% endblock %}
+            </div>
+        </main>
+    </div>
+</body>
+
+</html>

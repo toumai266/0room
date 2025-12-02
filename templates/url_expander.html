@@ -1,0 +1,271 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="chat-header">
+    <h2>🔗 안심 링크 (URL 검사기)</h2>
+</div>
+
+<div class="chat-body centered" id="chat-container">
+    <div id="welcome-message" style="text-align: center; max-width: 600px;">
+        <h3 style="font-size: 1.5rem; margin-bottom: 1rem;">의심스러운 단축 URL을 확인하세요</h3>
+        <p>
+            단축 URL의 최종 목적지와 URL의 연결/악성 여부 등을 확인합니다.<br>
+            phshing database를 이용하여 악성 URL을 검사합니다.
+        </p>
+    </div>
+    <!-- Results will be appended here -->
+</div>
+
+<div class="chat-footer">
+    <form id="url-form" style="width: 100%; display: flex; justify-content: center;">
+        <div class="input-wrapper">
+            <input type="url" id="url" name="url" required placeholder="확인할 단축 URL을 입력하세요 (예: bit.ly/...)" autofocus
+                autocomplete="off">
+            <button type="submit" title="확인하기">
+                <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" />
+                </svg>
+            </button>
+        </div>
+    </form>
+</div>
+
+<style>
+    .result-box.safe {
+        background-color: rgba(34, 197, 94, 0.15);
+        border: 1px solid rgba(34, 197, 94, 0.3);
+    }
+
+    .result-box.suspicious {
+        background-color: rgba(234, 179, 8, 0.15);
+        border: 1px solid rgba(234, 179, 8, 0.3);
+    }
+
+    .result-box.malicious {
+        background-color: rgba(239, 68, 68, 0.15);
+        border: 1px solid rgba(239, 68, 68, 0.3);
+    }
+
+    .result-box.error {
+        background-color: rgba(239, 68, 68, 0.15);
+        border: 1px solid rgba(239, 68, 68, 0.3);
+    }
+
+    .badge {
+        padding: 4px 12px;
+        border-radius: 4px;
+        font-weight: 700;
+        font-size: 0.9rem;
+    }
+
+    .badge.safe {
+        background: rgba(34, 197, 94, 0.2);
+        color: #4ade80;
+    }
+
+    .badge.suspicious {
+        background: rgba(234, 179, 8, 0.2);
+        color: #facc15;
+    }
+
+    .badge.malicious {
+        background: rgba(239, 68, 68, 0.2);
+        color: #f87171;
+    }
+
+    .badge.unknown {
+        background: rgba(148, 163, 184, 0.2);
+        color: #cbd5e1;
+    }
+
+    .report-grid {
+        display: grid;
+        gap: 0.75rem;
+        margin-top: 1rem;
+    }
+
+    .report-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0.75rem;
+        background: rgba(0, 0, 0, 0.2);
+        border-radius: 6px;
+    }
+
+    .report-label {
+        color: var(--text-secondary);
+        font-size: 0.9rem;
+    }
+
+    .report-value {
+        font-weight: 600;
+        color: var(--text-primary);
+    }
+
+    .loading-spinner {
+        display: inline-block;
+        width: 20px;
+        height: 20px;
+        border: 3px solid rgba(255, 255, 255, 0.3);
+        border-radius: 50%;
+        border-top-color: #fff;
+        animation: spin 1s ease-in-out infinite;
+    }
+
+    @keyframes spin {
+        to {
+            transform: rotate(360deg);
+        }
+    }
+</style>
+
+<script>
+    document.getElementById('url-form').addEventListener('submit', async function (e) {
+        e.preventDefault();
+
+        const urlInput = document.getElementById('url');
+        const url = urlInput.value;
+        if (!url) return;
+
+        // Clear input
+        urlInput.value = '';
+
+        // Hide welcome message
+        const welcomeMsg = document.getElementById('welcome-message');
+        if (welcomeMsg) {
+            welcomeMsg.style.display = 'none';
+            document.getElementById('chat-container').classList.remove('centered');
+        }
+
+        // Add loading indicator
+        const loadingId = 'loading-' + Date.now();
+        appendLoading(loadingId, url);
+
+        try {
+            const response = await fetch('/api/url-expander', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ url: url })
+            });
+
+            // Remove loading safely
+            const loadingEl = document.getElementById(loadingId);
+            if (loadingEl) loadingEl.remove();
+
+            let data;
+            try {
+                data = await response.json();
+            } catch (e) {
+                throw new Error('서버 응답을 처리할 수 없습니다.');
+            }
+
+            // If we have data.error but also safety_status, we want to show the result box (which includes the error)
+            // instead of a generic error box.
+            if (data.error && data.safety_status) {
+                appendResult(data);
+            } else if (!response.ok) {
+                appendError(data.error || '오류가 발생했습니다.', data.input_url || url);
+            } else {
+                appendResult(data);
+            }
+
+        } catch (error) {
+            console.error('Error:', error);
+            const loadingEl = document.getElementById(loadingId);
+            if (loadingEl) loadingEl.remove();
+            appendError(error.message || '네트워크 오류가 발생했습니다.', url);
+        }
+    });
+
+    function appendLoading(id, url) {
+        const container = document.getElementById('chat-container');
+        const html = `
+        <div id="${id}" class="result-box" style="opacity: 0.7;">
+            <div style="display: flex; align-items: center; gap: 1rem;">
+                <div class="loading-spinner"></div>
+                <div>
+                    <div style="font-size: 0.9rem; color: var(--text-secondary);">분석 중...</div>
+                    <div style="font-weight: 600;">${url}</div>
+                </div>
+            </div>
+        </div>`;
+        container.insertAdjacentHTML('beforeend', html);
+        container.scrollTop = container.scrollHeight;
+    }
+
+    function appendError(msg, url) {
+        const container = document.getElementById('chat-container');
+        const html = `
+        <div class="result-box error" style="animation: fadeIn 0.3s ease-out;">
+            <div style="margin-bottom: 0.5rem; color: var(--text-secondary); font-size: 0.9rem;">
+                입력 URL: ${url}
+            </div>
+            <div style="color: #f87171; font-weight: 600;">
+                ⚠️ ${msg}
+            </div>
+            <div style="margin-top: 4px; font-size: 0.85rem; color: #fca5a5;">
+                ※ 위험한 웹사이트일 수 있으니 주의하세요.
+            </div>
+        </div>`;
+        container.insertAdjacentHTML('beforeend', html);
+        container.scrollTop = container.scrollHeight;
+    }
+
+    function appendResult(data) {
+        const container = document.getElementById('chat-container');
+
+        let statusClass = 'safe';
+        // statusText is now coming from backend in Korean, but we might want to map it to class
+        // Backend returns: "안전함", "의심됨...", "위험..."
+
+        if (data.safety_status.includes('의심됨')) {
+            statusClass = 'suspicious';
+        } else if (data.safety_status.includes('위험')) {
+            statusClass = 'malicious';
+        }
+
+        let errorHtml = '';
+        if (data.error) {
+            errorHtml = `
+            <div style="margin-bottom: 1rem; padding: 0.75rem; background: rgba(239, 68, 68, 0.2); border-radius: 6px; border: 1px solid rgba(239, 68, 68, 0.3);">
+                <div style="color: #fca5a5; font-size: 0.9rem; font-weight: 600; margin-bottom: 4px;">⚠️ 연결 오류</div>
+                <div style="color: #fff; font-size: 0.9rem;">${data.error}</div>
+                <div style="margin-top: 4px; font-size: 0.85rem; color: #fca5a5;">
+                    ※ 위험한 웹사이트일 수 있으니 주의하세요.
+                </div>
+            </div>`;
+        }
+
+        const html = `
+        <div class="result-box ${statusClass}" style="animation: fadeIn 0.3s ease-out;">
+            <div style="margin-bottom: 1rem;">
+                <div style="font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 4px;">입력 URL</div>
+                <div style="font-family: monospace; word-break: break-all;">${data.input_url}</div>
+            </div>
+            
+            ${errorHtml}
+
+            <div style="margin-bottom: 1.5rem;">
+                <div style="font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 4px;">최종 목적지</div>
+                <div style="font-size: 1.1rem; font-weight: 600; color: var(--accent-color); word-break: break-all;">
+                    <a href="${data.final_url}" target="_blank" style="color: inherit; text-decoration: underline;">${data.final_url}</a>
+                </div>
+            </div>
+
+            <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem;">
+                <span class="badge ${statusClass}">${data.safety_status}</span>
+                <span style="font-size: 0.9rem; color: var(--text-secondary);">
+                    HTTP 상태: <span style="color: #fff;">${data.status_code || 'N/A'}</span>
+                </span>
+            </div>
+        </div>
+        `;
+
+        container.insertAdjacentHTML('beforeend', html);
+        container.scrollTop = container.scrollHeight;
+    }
+</script>
+{% endblock %}

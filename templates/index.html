@@ -1,0 +1,16 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div
+    style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 60vh; text-align: center;">
+    <img src="{{ url_for('static', filename='images/logo.png') }}" alt="0room Logo" class="main-logo-img"
+        style="margin-bottom: 5rem;">
+
+
+    <p style="font-size: 1rem; max-width: 500px;">
+        사이드바에서 원하는 보안 도구를 선택하세요.<br>
+        <br>
+        Discord : xyfermat
+    </p>
+</div>
+{% endblock %}
