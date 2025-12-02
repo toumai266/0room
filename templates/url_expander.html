@@ -13,7 +13,7 @@
             phshing database를 이용하여 악성 URL을 검사합니다.
         </p>
     </div>
-    <!-- Results will be appended here -->
+    <!-- 결과가 여기에 추가됩니다 -->
 </div>
 
 <div class="chat-footer">
@@ -128,17 +128,17 @@
         const url = urlInput.value;
         if (!url) return;
 
-        // Clear input
+        // 입력 초기화
         urlInput.value = '';
 
-        // Hide welcome message
+        // 환영 메시지 숨김
         const welcomeMsg = document.getElementById('welcome-message');
         if (welcomeMsg) {
             welcomeMsg.style.display = 'none';
             document.getElementById('chat-container').classList.remove('centered');
         }
 
-        // Add loading indicator
+        // 로딩 표시기 추가
         const loadingId = 'loading-' + Date.now();
         appendLoading(loadingId, url);
 
@@ -151,7 +151,7 @@
                 body: JSON.stringify({ url: url })
             });
 
-            // Remove loading safely
+            // 로딩 안전하게 제거
             const loadingEl = document.getElementById(loadingId);
             if (loadingEl) loadingEl.remove();
 
@@ -162,8 +162,8 @@
                 throw new Error('서버 응답을 처리할 수 없습니다.');
             }
 
-            // If we have data.error but also safety_status, we want to show the result box (which includes the error)
-            // instead of a generic error box.
+            // data.error가 있지만 safety_status도 있는 경우, 결과 박스(오류 포함)를 표시합니다.
+            // 일반적인 오류 박스 대신.
             if (data.error && data.safety_status) {
                 appendResult(data);
             } else if (!response.ok) {
@@ -218,8 +218,8 @@
         const container = document.getElementById('chat-container');
 
         let statusClass = 'safe';
-        // statusText is now coming from backend in Korean, but we might want to map it to class
-        // Backend returns: "안전함", "의심됨...", "위험..."
+        // statusText는 이제 백엔드에서 한국어로 제공되지만, 클래스에 매핑해야 할 수도 있습니다.
+        // 백엔드 반환값: "안전함", "의심됨...", "위험..."
 
         if (data.safety_status.includes('의심됨')) {
             statusClass = 'suspicious';

@@ -30,7 +30,7 @@ body {
     height: 100%;
 }
 
-/* Sidebar */
+/* 사이드바 */
 .sidebar {
     width: 260px;
     background-color: var(--bg-sidebar);
@@ -93,7 +93,7 @@ body {
     background-color: #343541;
 }
 
-/* Main Content */
+/* 메인 콘텐츠 */
 .main-content {
     flex: 1;
     background-color: var(--bg-main);
@@ -117,7 +117,7 @@ body {
     height: auto;
 }
 
-/* Chat Layout Styles */
+/* 채팅 레이아웃 스타일 */
 .chat-header {
     position: absolute;
     top: 0;
@@ -216,7 +216,7 @@ body {
     fill: white;
 }
 
-/* Result Box Adjustments */
+/* 결과 박스 조정 */
 .result-box {
     width: 100%;
     max-width: 768px;
@@ -228,7 +228,7 @@ body {
     border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-/* Typography & Elements */
+/* 타이포그래피 및 요소 */
 h1,
 h2,
 h3 {
@@ -243,7 +243,7 @@ p {
     line-height: 1.6;
 }
 
-/* Utility */
+/* 유틸리티 */
 .text-center {
     text-align: center;
 }
